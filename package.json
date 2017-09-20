@@ -1,0 +1,28 @@
+{
+  "name": "fractals",
+  "version": "0.0.0",
+  "description": "T-fractals web generator",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "rm -rf lib/ && exec $(npm bin)/coffee -c -o lib/ src/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nim579/fractals.git"
+  },
+  "keywords": [
+    "fractal",
+    "canvas",
+    "t-fractal"
+  ],
+  "author": "Nick Iv",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nim579/fractals/issues"
+  },
+  "homepage": "https://github.com/nim579/fractals#readme",
+  "devDependencies": {
+    "coffee-script": "^1.12.7"
+  }
+}
