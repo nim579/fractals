@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta content="charset=UTF-8" http-equiv="content-type">
+        <meta content="width=device-width, initial-scale=1, user-scalable=no" name="viewport">
+        <title>А вот и твой ноутбук!</title>
+        <script type="text/javascript" src="https://yastatic.net/jquery/3.1.1/jquery.min.js"></script>
+        <script type="text/javascript" src="https://yastatic.net/lodash/4.17.11/lodash.min.js"></script>
+        <script type="text/javascript" src="lib/fractal.js"></script>
+        <script type="text/javascript">
+            $(function() {
+                var c = {
+                  n: [0, 0, 0],
+                  r: [255, 100, 100],
+                  g: [100, 255, 100],
+                  b: [100, 100, 255]
+                };
+                var figure = [
+                    [c.n, c.n, c.n, c.r],
+                    [c.n, c.g, c.n, c.b],
+                    [c.n, c.n, c.n, c.r],
+                    [c.r, c.b, c.r, c.r]
+                ];
+                var fractal = new Fractal('#fractal', figure, [255, 255, 255, 1]);
+                fractal.draw(function() {
+                    $('#message').removeClass('m_hidden');
+                });
+            });
+        </script>
+        <style media="screen">
+            html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+                background: white;
+
+                font-family: sans-serif;
+                font-size: 10px;
+                font-weight: normal;
+            }
+            .layout {
+                position: relative;
+                display: flex;
+                max-width: 100%;
+                min-height: 100vh;
+                padding: 2rem;
+                box-sizing: border-box;
+                flex-direction: row;
+                align-items: center;
+                justify-content: center;
+            }
+            canvas {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                border-color: 1px solid white;
+                vertical-align: top;
+            }
+            article {
+                position: relative;
+                display: block;
+                margin: 50px auto;
+                width: 100%;
+                max-width: 500px;
+                transition: opacity 2s ease-out, transform 1.8s cubic-bezier(.18,.89,.15,1.16);
+                z-index: 2;
+            }
+            article::before {
+                content: "";
+                position: absolute;
+                top: -10%;
+                left: -10%;
+                bottom: -10%;
+                right: -10%;
+                background: white;
+                filter: blur(250px);
+                opacity: 0.6;
+                z-index: -1;
+            }
+            article.m_hidden {
+                opacity: 0;
+                transform: translateY(220px);
+                pointer-events: none;
+            }
+
+            article h1 {
+                display: block;
+                margin-bottom: 0.4em;
+                font-family: Playfair Display, serif;
+                font-size: 35px;
+                font-weight: bold;
+                font-style: italic;
+                color: #232323;
+                line-height: 1.5em;
+            }
+            article p {
+                display: block;
+                font-family: Playfair Display, serif;
+                font-size: 15px;
+                font-weight: normal;
+                font-style: normal;
+                color: #232323;
+                line-height: 1.5em;
+            }
+            article p.right {
+                margin-top: 2.5em;
+                text-align: right;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="layout">
+            <canvas id="fractal"></canvas>
+            <article id="message" class="m_hidden">
+                <h1>А вот и твой ноутбук!</h1>
+                <p>Привет! Я тут более-менее всё настроил, что бы тебе быстрее начать им пользоваться. Обновил все программы, и поставил Quake 😄</p>
+                <p>Пользуйся им с удовольствием, и скорее поправляйся!</p>
+                <p class="right">Люблю тебя 😘😘</br>Николя</p>
+            </article>
+        </div>
+    </body>
+</html>
