@@ -1,0 +1,44 @@
+{
+  "env": {
+    "es6": true,
+    "node": true,
+    "mocha": true,
+    "browser": true
+  },
+  "extends": ["eslint:recommended", "plugin:vue/vue3-recommended"],
+  "parserOptions": {
+    "sourceType": "module",
+    "ecmaVersion": 2020
+  },
+  "rules": {
+    "indent": [
+      "error",
+      2
+    ],
+    "linebreak-style": [
+      "error",
+      "unix"
+    ],
+    "quotes": [
+      "error",
+      "single"
+    ],
+    "semi": [
+      "error",
+      "always"
+    ],
+    "no-cond-assign": "off",
+    "no-empty": [
+      "error",
+      { "allowEmptyCatch": true }
+    ],
+    "no-console": "warn",
+    "vue/max-attributes-per-line": ["warn", {
+      "singleline": 5,
+      "multiline": 3
+    }],
+    "vue/no-v-html": "off",
+    "vue/require-prop-types": "off",
+    "vue/multi-word-component-names": "off"
+  }
+}
