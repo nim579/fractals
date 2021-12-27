@@ -1,6 +1,6 @@
 {
   "name": "fractals.js",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "T-fractals web generator",
   "main": "./dist/fractals.cjs.js",
   "module": "./dist/fractals.es.js",
