@@ -1,91 +1,107 @@
 <template>
   <div class="layout">
     <aside class="layout__controls">
-      <label class="layout__label">Size: {{ size.w }}x{{ size.h }}</label>
-      <input v-model="size.w" class="range" type="range" min="1" max="15">
-      <input v-model="size.h" class="range" type="range" min="1" max="15">
-
-      <div class="layout__label">
-        Pixel color
-      </div>
-      <div class="colors">
-        <label v-for="item in colorsKeys" :key="item" class="color" :style="{'background-color': `rgba(${colors[item].join(',')})`}">
-          <input
-            v-model="color" :value="item"
-            type="radio" name="color" class="color__input"
-          >
-          <transition enter-from-class="m_hidden" leave-to-class="m_hidden">
-            <div v-if="item === color" class="color__check" />
-          </transition>
-        </label>
+      <div class="layout__controls_group">
+        <label class="layout__label">Size: {{ size.w }}x{{ size.h }}</label>
+        <input v-model="size.w" class="range" type="range" min="1" max="15">
+        <input v-model="size.h" class="range" type="range" min="1" max="15">
       </div>
 
-      <div class="layout__label">
-        Background color
-      </div>
-      <div class="colors">
-        <label v-for="item in colorsKeys" :key="item" class="color" :style="{'background-color': `rgba(${colors[item].join(',')})`}">
-          <input
-            v-model="background" :value="item"
-            type="radio" name="color" class="color__input"
-          >
-          <transition enter-from-class="m_hidden" leave-to-class="m_hidden">
-            <div v-if="item === background" class="color__check" />
-          </transition>
-        </label>
+      <div class="layout__controls_group">
+        <div class="layout__label">
+          Pixel color
+        </div>
+        <div class="colors">
+          <label v-for="item in colorsKeys" :key="item" class="color" :style="{'background-color': `rgba(${colors[item].join(',')})`}">
+            <input
+              v-model="color" :value="item"
+              type="radio" name="color" class="color__input"
+            >
+            <transition enter-from-class="m_hidden" leave-to-class="m_hidden">
+              <div v-if="item === color" class="color__check" />
+            </transition>
+          </label>
+        </div>
+
+        <div class="layout__label">
+          Background color
+        </div>
+        <div class="colors">
+          <label v-for="item in colorsKeys" :key="item" class="color" :style="{'background-color': `rgba(${colors[item].join(',')})`}">
+            <input
+              v-model="background" :value="item"
+              type="radio" name="color" class="color__input"
+            >
+            <transition enter-from-class="m_hidden" leave-to-class="m_hidden">
+              <div v-if="item === background" class="color__check" />
+            </transition>
+          </label>
+        </div>
       </div>
 
-      <div class="layout__label">
-        Figure
-      </div>
-      <div
-        class="grid"
-        :style="{ 'grid-template-columns': `repeat(${size.w}, 1fr)`, 'grid-template-rows': `repeat(${size.h}, 1fr)` }"
-      >
-        <label
-          v-for="(point, index) in points" :key="index"
-          class="pixel"
-          :style="{'background-color': `rgba(${colors[point].join(',')})`}"
+      <div class="layout__controls_group">
+        <div class="layout__label">
+          Figure
+        </div>
+        <div
+          class="grid"
+          :style="{ 'grid-template-columns': `repeat(${size.w}, 1fr)`, 'grid-template-rows': `repeat(${size.h}, 1fr)` }"
         >
-          <input type="checkbox" :checked="point === color" class="pixel__input" @input="ev => onChangePoint(index, ev)">
-        </label>
+          <label
+            v-for="(point, index) in points" :key="index"
+            class="pixel"
+            :style="{'background-color': `rgba(${colors[point].join(',')})`}"
+          >
+            <input type="checkbox" :checked="point === color" class="pixel__input" @input="ev => onChangePoint(index, ev)">
+          </label>
+        </div>
       </div>
 
-      <div class="layout__label">
-        Fractal size
-      </div>
-      <div class="controls">
-        <label v-for="item in figureSizes" :key="item.value" class="bool">
-          <input v-model="figureSize" :value="item.value" type="radio" name="figure_size" class="bool__input">
-          <span class="bool__label">{{ item.label }}</span>
+      <div class="layout__controls_group">
+        <div class="layout__label">
+          Fractal size
+        </div>
+        <div class="controls">
+          <label v-for="item in figureSizes" :key="item.value" class="bool">
+            <input v-model="figureSize" :value="item.value" type="radio" name="figure_size" class="bool__input">
+            <span class="bool__label">{{ item.label }}</span>
 
-          <transition enter-from-class="m_hidden" leave-to-class="m_hidden">
-            <div v-if="item.value === figureSize" class="bool__check" />
-          </transition>
-        </label>
+            <transition enter-from-class="m_hidden" leave-to-class="m_hidden">
+              <div v-if="item.value === figureSize" class="bool__check" />
+            </transition>
+          </label>
+        </div>
       </div>
 
-      <div class="layout__label">
-        Control
-      </div>
-      <div class="controls">
-        <button type="button" class="button" :disabled="drawing" @click="draw">
-          Draw
-        </button>
-        <button type="button" class="button" :disabled="drawing" @click="clear">
-          Clear
-        </button>
-        <button type="button" class="button" :disabled="!drawing" @click="stop">
-          Stop
-        </button>
-        <button type="button" class="button" :disabled="!(!drawing && drawed)" @click="download">
-          Download
-        </button>
+      <div class="layout__controls_group">
+        <div class="layout__label">
+          Control
+        </div>
+        <div class="controls">
+          <button type="button" class="button" :disabled="drawing" @click="draw">
+            Draw
+          </button>
+          <button type="button" class="button" :disabled="drawing" @click="clear">
+            Clear
+          </button>
+          <button type="button" class="button" :disabled="!drawing" @click="stop">
+            Stop
+          </button>
+          <button type="button" class="button" :disabled="drawing" @click="permalink">
+            <span v-if="!permalinkCopied">Parmalink</span>
+            <span v-else>Copied</span>
+          </button>
+          <button type="button" class="button" :disabled="!(!drawing && drawed)" @click="download">
+            Download
+          </button>
+        </div>
       </div>
     </aside>
 
     <article class="layout__content">
-      <canvas ref="draw" class="draw" :class="`m_${figureSize}`" />
+      <div ref="content" class="draw" :class="`m_${figureSize}`">
+        <canvas ref="draw" class="draw__canvas" />
+      </div>
     </article>
   </div>
 </template>
@@ -110,8 +126,9 @@ export default {
 
     drawing: false,
     drawed: false,
+    permalinkCopied: false,
 
-    fractal: null
+    fractal: null,
   }),
 
   computed: {
@@ -180,6 +197,9 @@ export default {
     'figureSize': {
       handler() {
         requestAnimationFrame(() => {
+          if (!this.$refs.draw) return;
+          if (!this.fractal) return;
+
           const width = this.$refs.draw.offsetWidth;
           const height = this.$refs.draw.offsetHeight;
 
@@ -190,18 +210,49 @@ export default {
     },
     'params.fragment': {
       handler() {
-        this.fractal.fragment = this.params.fragment;
+        if (this.fractal) this.fractal.fragment = this.params.fragment;
       }
     },
     'params.bg': {
       handler() {
-        this.fractal.bg = this.params.bg;
+        if (this.fractal) this.fractal.bg = this.params.bg;
       }
     }
   },
 
   mounted() {
     this.fractal = new Fractal(this.$refs.draw, this.params.fragment, this.params.bg);
+
+    const search = new URLSearchParams(location.search);
+    const query = Object.fromEntries(search.entries());
+
+    if (query.w) {
+      const w = parseInt(query.w);
+      if (!isNaN(w) && w >= 1 && w <= 15) this.size.w = w;
+    }
+    if (query.h) {
+      const h = parseInt(query.h);
+      if (!isNaN(h) && h >= 1 && h <= 15) this.size.h = h;
+    }
+
+    if (query.b) {
+      if (this.colors[query.b]) this.background = query.b;
+    }
+    if (query.c) {
+      if (this.colors[query.c]) this.color = query.c;
+    }
+    if (query.s) {
+      const avail = this.figureSizes.map(({value}) => value);
+      if (avail.includes(query.s)) this.figureSize = query.s;
+    }
+    if (query.p) {
+      const vals = query.p.split('');
+      const points = new Array(this.size.w * this.size.h);
+
+      this.points = map(points, (p, index) => {
+        return this.colors[vals[index]] ? vals[index] : this.background;
+      });
+    }
   },
 
   methods: {
@@ -235,6 +286,11 @@ export default {
       this.fractal.draw(() => {
         this.drawing = false;
         this.drawed = true;
+      });
+
+      window.scrollTo({
+        top: this.$refs.content.offsetTop,
+        behavior: 'smooth'
       });
     },
     clear() {
@@ -275,15 +331,37 @@ export default {
       pom.setAttribute('href', url);
       pom.setAttribute('download', filename);
 
-      if (document.createEvent) {
-        const event = document.createEvent('MouseEvents');
-        event.initEvent('click', true, true);
+      if (window.MouseEvent) {
+        const event = new MouseEvent('click', {bubbles: true, cancelable: true});
         pom.dispatchEvent(event);
       } else {
         pom.click();
       }
 
       URL.revokeObjectURL(url);
+    },
+
+    async permalink() {
+      const query = {
+        w: this.size.w,
+        h: this.size.h,
+        b: this.background,
+        c: this.color,
+        s: this.figureSize,
+        p: this.points.join('')
+      };
+
+      const search = new URLSearchParams(query);
+
+      history.replaceState(null, '', `?${search.toString()}`);
+
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(location.href);
+        this.permalinkCopied = true;
+        setTimeout(() => {
+          this.permalinkCopied = false;
+        }, 1500);
+      }
     }
   }
 };
@@ -308,20 +386,36 @@ html, body {
 
 .layout {
   display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: flex-start;
   max-width: 100%;
   height: 100vh;
-  padding: 2rem;
   box-sizing: border-box;
   flex-direction: row;
   align-items: stretch;
   justify-content: center;
 
   &__controls {
-    flex: 0 0 228px;
-    margin-right: 2rem;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 15px;
+    flex: 0 0 240px;
+    min-height: 0;
+    max-height: 100%;
+    padding: 2rem;
+    overflow: auto;
+
+    &_group {
+      flex: 1 1 240px;
+    }
   }
   &__content {
     flex: 1 1 auto;
+    padding: 2rem;
     overflow: auto;
   }
   &__label {
@@ -334,6 +428,18 @@ html, body {
 
     &:first-child {
       margin-top: 0;
+    }
+  }
+
+  @media screen and (max-width: 860px) {
+    flex-direction: column;
+    display: block;
+
+    &__controls {
+      flex-basis: auto;
+    }
+    &__content {
+      flex-shrink: 0;
     }
   }
 }
@@ -539,14 +645,30 @@ html, body {
 }
 
 .draw {
+  position: relative;
   width: 100%;
   height: 100%;
   border-color: 1px solid white;
   vertical-align: top;
 
+  &__canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+
   &.m_fixed {
     min-width: 2500px;
     min-height: 2500px;
+  }
+
+  @media screen and (max-width: 860px) {
+    height: 0;
+    min-height: 500px;
+    padding-top: 100%;
+    box-sizing: border-box;
   }
 }
 </style>
