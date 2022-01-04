@@ -1,6 +1,6 @@
 /*
   @license
-	fractals.js v0.0.0 - Mon, 27 Dec 2021 18:27:08 GMT
+	fractals.js v1.0.0 - Tue, 04 Jan 2022 12:09:36 GMT
 	https://github.com/nim579/fractals#readme
 	Released under the MIT License.
 */
@@ -16,7 +16,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
  */
 
 /**
- * @typedef {FractalColor[][]} FractalFragment
+ * @typedef {FractalColor[][]} FractalFigure
  */
 
 /**
@@ -26,38 +26,36 @@ Object.defineProperty(exports, '__esModule', { value: true });
  * @property {number} countY
  */
 
-/**
- * @typedef {FractalIteration[]} FractalIteration
- */
-
-
 /** @type FractalColor */
 const defaultColor = [255, 255, 255];
 
-/** @type FractalFragment */
-const defaultFragment = [[defaultColor]];
+/** @type FractalFigure */
+const defaultFigure = [[defaultColor]];
+
 
 /** @class */
 class Fractal {
   /**
    * @param {HTMLCanvasElement} selector
-   * @param {FractalFragment} fragment
+   * @param {FractalFigure} figure
    * @param {FractalColor} bg
+   * @param {number} ratio
    */
-  constructor(selector, fragment, bg = [0, 0, 0]) {
+  constructor(selector, figure, bg = [0, 0, 0], ratio = 2) {
     const canvas = selector instanceof HTMLCanvasElement
       ? selector
       : document.querySelector(selector);
 
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
+    this.ctx.globalCompositeOperation = 'multiply';
 
-    this.fragment = fragment || defaultFragment;
+    if (!figure) figure = defaultFigure;
 
     this.params = {
       width: canvas.offsetWidth,
       height: canvas.offsetHeight,
-      bg: bg
+      ratio, bg, figure
     };
 
     canvas.width = this.params.width;
@@ -93,14 +91,66 @@ class Fractal {
   }
 
   /**
-   * Return image blob of fractal
-   * @param {string} type
-   * @returns {Promise<Blob>}
+   * @type {FractalFigure}
    */
-  getBlob(type = 'image/png') {
-    return new Promise(callback => {
-      this.canvas.toBlob(callback, type);
+  get figure() {
+    const alpha = Math.ceil(255 * (1 / this.iterations));
+
+    return this.params.figure.map(row => {
+      return row.map(point => {
+        if (Array.isArray(point)) {
+          return [(point[0] || 0), (point[1] || 0), (point[2] | 0), alpha];
+        } else if (point) {
+          return [255, 255, 255, alpha];
+        } else {
+          return [0, 0, 0, alpha];
+        }
+      });
     });
+  }
+  set figure(figure) {
+    this.params.figure = figure;
+  }
+
+  get figureSize() {
+    return {
+      width: this.params.figure[0].length,
+      height: this.params.figure.length
+    };
+  }
+
+  get iterations() {
+    let ratio = this.params.ratio;
+    let iterations = 0;
+    const {width, height} = this.figureSize;
+
+    while (iterations < 100) {
+      ratio = Math.pow(this.params.ratio, iterations);
+
+      if (width * ratio > this.width || height * ratio > this.height) {
+        break;
+      } else {
+        iterations++;
+      }
+    }
+
+    return iterations;
+  }
+
+  get image() {
+    const { width, height } = this.figureSize;
+    const pixels = Uint8ClampedArray.from(this.figure.flat().flat());
+    const imgData = new ImageData(pixels, width, height);
+
+    const img = document.createElement('canvas');
+    img.width = width;
+    img.height = height;
+
+    const ctx = img.getContext('2d');
+
+    ctx.putImageData(imgData, 0, 0);
+
+    return img;
   }
 
   /**
@@ -116,23 +166,47 @@ class Fractal {
     return `rgba(${r || 0}, ${g || 0}, ${b || 0}, ${a || 1})`;
   }
 
+  getFigure(iteration = 1, image = this.image) {
+    const ratio = Math.pow(this.params.ratio, iteration);
+    const width = image.width * ratio;
+    const height = image.height * ratio;
+
+    const fig = document.createElement('canvas');
+    fig.width = width;
+    fig.height = height;
+
+    const ctx = fig.getContext('2d');
+
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(image, 0, 0, width, height);
+
+    return fig;
+  }
+
+  getPatttern(iteration = 0, image = this.image) {
+    const fig = this.getFigure(iteration, image);
+    return this.ctx.createPattern(fig, 'repeat');
+  }
+
   /**
    * Stop and clear screen
    */
   clear() {
     this.stop();
 
-    this.ctx.clearRect(0, 0, this.params.width, this.params.height);
+    this.iteration = 0;
+
     this.ctx.fillStyle = this.rgba(this.params.bg);
-    this.ctx.fillRect(0, 0, this.params.width, this.params.height);
+    this.ctx.clearRect(0, 0, this.width, this.height);
+    this.ctx.fillRect(0, 0, this.width, this.height);
   }
 
   /**
    * Stop drawing
    */
   stop() {
-    if (this._drawTO) clearTimeout(this._drawTO);
-    if (this._iterateTO) clearTimeout(this._iterateTO);
+    // if (this._drawTO) clearTimeout(this._drawTO);
+    if (this._drawTO) cancelAnimationFrame(this._drawTO);
   }
 
   /**
@@ -140,128 +214,54 @@ class Fractal {
    * @param {Function} callback
    * @returns {HTMLCanvasElement}
    */
-  draw(callback) {
-    const iterations = this._computeIterations();
-    this.fragment = this._normalizeFragment(this.fragment, iterations.length);
-
-    let count = iterations.length;
-
+  draw() {
     this.clear();
 
-    const call = (i = 0) => {
-      this._drawTO = setTimeout(() => {
-        this.iteration(0, iterations[i], () => {
-          count--;
-          if (iterations[i + 1]) call(i + 1);
-          if (count <= 0) callback(this.canvas);
-        });
-      }, 100);
+    const iterations = this.iterations + 0;
+    const image = this.image;
+
+    const draw = callback => {
+      this._drawTO = requestAnimationFrame(() => {
+        const iteration = this._drawStep(image);
+
+        if (iteration < iterations) {
+          draw(callback);
+        } else {
+          callback(this.canvas);
+        }
+      });
     };
 
-    call();
-  }
-
-  /**
-   * Draw iteration of fractal
-   * @param {number} i
-   * @param {FractalIteration} iteration
-   * @param {Function} callback
-   */
-  iteration(i = 0, iteration, callback) {
-    this._iterateTO = setTimeout(() => {
-      let j = 0;
-
-      while (j <= iteration.countY) {
-        this.figure(i, j, iteration.ratio);
-        j++;
-      }
-
-      i++;
-
-      if (i <= iteration.countX) {
-        return this.iteration(i, iteration, callback);
-      }
-
-      callback();
-    }, 0);
-  }
-
-  /**
-   * Draw one figure of fractal
-   * @param {number} iX
-   * @param {number} iY
-   * @param {number} ratio
-   */
-  figure(iX, iY, ratio) {
-    const height = this.fragment.length * ratio;
-
-    this.fragment.forEach((points, row) => {
-      const width = points.length * ratio;
-
-      points.forEach((point, col) => {
-        this.ctx.fillStyle = this.rgba(point);
-
-        this.ctx.fillRect(
-          iX * width + col * ratio,
-          iY * height + row * ratio,
-          ratio,
-          ratio
-        );
-      });
+    return new Promise(resolve => {
+      draw(resolve);
     });
   }
 
-  /**
-   * Computes iterations data for draw
-   * @returns {FractalIterations}
-   */
-  _computeIterations() {
-    const iterations = [];
-    let ratio = 1;
-    const figureWidth = this.fragment[0].length;
-    const figureHeight = this.fragment.length;
+  _drawStep(image = this.image) {
+    const pattern = this.getPatttern(this.iteration, image);
 
-    const addIteration = () => {
-      const countX = Math.floor(this.width / (ratio * figureWidth));
-      const countY = Math.floor(this.height / (ratio * figureHeight));
+    this.ctx.fillStyle = pattern;
+    this.ctx.fillRect(0, 0, this.width, this.height);
 
-      if (countX > 0 && countY > 0) {
-        iterations.push({ ratio, countX, countY});
-        ratio = ratio * 2;
-        addIteration();
-      } else {
-        return iterations;
-      }
-    };
+    return ++this.iteration;
+  }
 
-    addIteration();
+  step(iteration = this.iteration) {
+    const pattern = this.getPatttern(iteration, this.image);
+    this.ctx.fillStyle = pattern;
+    this.ctx.fillRect(0, 0, this.width, this.height);
 
-    return iterations;
+    return iteration + 1;
   }
 
   /**
-   * Normalize fragment
-   * @param {FractalFragment} fragment
-   * @param {number} iterations
-   * @returns {FractalFragment}
+   * Return image blob of fractal
+   * @param {string} type
+   * @returns {Promise<Blob>}
    */
-  _normalizeFragment(fragment, iterations = 1) {
-    const alpha = (1 / iterations).toFixed(2);
-
-    return fragment.map(row => {
-      return row.map(point => {
-        let color;
-
-        if (Array.isArray(point)) {
-          color = [...point.slice(0, 3)];
-        } else if (point) {
-          color = [255, 255, 255];
-        } else {
-          color = [0, 0, 0];
-        }
-
-        return [...color, alpha];
-      });
+  getBlob(type = 'image/png') {
+    return new Promise(callback => {
+      this.canvas.toBlob(callback, type);
     });
   }
 }

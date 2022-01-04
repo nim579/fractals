@@ -55,11 +55,16 @@
             <input type="checkbox" :checked="point === color" class="pixel__input" @input="ev => onChangePoint(index, ev)">
           </label>
         </div>
+        <div class="controls">
+          <button type="button" class="button" :disabled="drawing" @click="clearPoints">
+            Clear
+          </button>
+        </div>
       </div>
 
       <div class="layout__controls_group">
         <div class="layout__label">
-          Fractal size
+          Image size
         </div>
         <div class="controls">
           <label v-for="item in figureSizes" :key="item.value" class="bool">
@@ -80,6 +85,9 @@
         <div class="controls">
           <button type="button" class="button" :disabled="drawing" @click="draw">
             Draw
+          </button>
+          <button type="button" class="button" :disabled="drawing" @click="step">
+            Step<span v-if="iteration">&nbsp;{{ iteration }}</span>
           </button>
           <button type="button" class="button" :disabled="drawing" @click="clear">
             Clear
@@ -129,6 +137,7 @@ export default {
     permalinkCopied: false,
 
     fractal: null,
+    iteration: 0
   }),
 
   computed: {
@@ -210,7 +219,7 @@ export default {
     },
     'params.fragment': {
       handler() {
-        if (this.fractal) this.fractal.fragment = this.params.fragment;
+        if (this.fractal) this.fractal.figure = this.params.fragment;
       }
     },
     'params.bg': {
@@ -277,23 +286,36 @@ export default {
         : this.background;
     },
 
-    draw() {
+    async draw() {
       if (this.drawing) return;
 
       this.drawed = false;
       this.drawing = true;
-
-      this.fractal.draw(() => {
-        this.drawing = false;
-        this.drawed = true;
-      });
+      this.iteration = 0;
 
       window.scrollTo({
         top: this.$refs.content.offsetTop,
         behavior: 'smooth'
       });
+
+      await this.fractal.draw();
+
+      this.drawing = false;
+      this.drawed = true;
+    },
+    step() {
+      if (this.drawing) return;
+
+      this.iteration = this.fractal.step();
+      this.fractal.iteration = this.iteration;
     },
     clear() {
+      if (this.drawing) return;
+
+      this.iteration = 0;
+      this.fractal.clear();
+    },
+    clearPoints() {
       if (this.drawing) return;
 
       const count = this.size.w * this.size.h;
@@ -305,14 +327,13 @@ export default {
       }
 
       this.points = newPoints;
-
-      this.fractal.clear();
     },
     stop() {
       if (!this.drawing) return;
 
       this.drawed = false;
       this.drawing = false;
+      this.iteration = 0;
 
       this.fractal.stop();
     },
@@ -401,6 +422,7 @@ html, body {
     flex-direction: row;
     flex-wrap: wrap;
     align-items: flex-start;
+    align-content: flex-start;
     justify-content: flex-start;
     gap: 15px;
     flex: 0 0 240px;
@@ -584,8 +606,13 @@ html, body {
   display: grid;
   width: 100%;
   max-width: 250px;
+  margin-bottom: 10px;
   grid-template-columns: repeat(var(--grid-width, 1), 1fr);
   grid-gap: 3px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
 }
 
 .pixel {
